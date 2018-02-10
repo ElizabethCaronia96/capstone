@@ -5,7 +5,8 @@ import cv2
 def webcamvid():
 	cap = cv2.VideoCapture(0)
 
-	fourcc = cv2.VideoWriter_fourcc(*'XVID')
+	#fourcc = cv2.VideoWriter_fourcc(*'XVID')
+	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 	out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
 
 	while(cap.isOpened()):
