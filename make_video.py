@@ -2,6 +2,22 @@ from pykinect import nui
 import numpy as np
 import cv2
 
+import thread
+import itertools
+import ctypes
+
+import pykinect
+from pykinect import nui
+from pykinect.nui import JointId
+
+import pygame
+from pygame.color import THECOLORS
+from pygame.locals import *
+
+KINECTEVENT = pygame.USEREVENT
+pygame.init()
+skeletons = None
+
 # Capture from Webcam
 def webcamvid():
 
@@ -27,20 +43,34 @@ def webcamvid():
 	cv2.destroyAllWindows()
 
 # Capture from Kinect
-def video_handler_function(frame):
+def kinect_video_function(frame):
 	video = np.empty((480,640,4),np.uint8)
 	frame.image.copy_bits(video.ctypes.data)
 
-	out.write(video)
+	# Draw skeleton
+	cv2.circle(video,(300,300),10,(255,255,255))
 
+	# Write video to output file
+	out.write(video)
+	# Show output file
 	cv2.imshow('KINECT Video Stream', video)
 
 def kinectvid():
 	
 	kinect = nui.Runtime()
-	kinect.video_frame_ready += video_handler_function
-	kinect.video_stream.open(nui.ImageStreamType.Video, 2,nui.ImageResolution.Resolution640x480,nui.ImageType.Color)
+	kinect.skeleton_engine.enabled = True
 
+	def post_frame(frame):
+		try:
+			pygame.event.post(pygame.event.Event(KINECTEVENT, skeletons = frame.SkeletonData))
+		except:
+			# event queue full
+			pass
+	
+	kinect.skeleton_frame_ready += post_frame
+	kinect.video_frame_ready += kinect_video_function
+	kinect.video_stream.open(nui.ImageStreamType.Video, 2,nui.ImageResolution.Resolution640x480,nui.ImageType.Color)
+	
 	cv2.namedWindow('KINECT Video Stream', cv2.WINDOW_AUTOSIZE)
 
 	# Initialize writing video
@@ -49,6 +79,12 @@ def kinectvid():
 
 	# Main loop - runs video_handler_function automatically
 	while True:
+		e = pygame.event.wait()
+
+		if e.type == KINECTEVENT:
+			skeletons = e.skeletons
+			#draw_skeletons(skeletons)
+
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
 
@@ -72,7 +108,7 @@ def watchvid():
 	cv2.destroyAllWindows()
 
 # Main
-choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for using output.avi:")
+choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for playing output.avi: ")
 if choice == "0": # Webcam record
 	webcamvid()
 elif choice == "1": # Kinect record
