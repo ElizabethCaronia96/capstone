@@ -14,10 +14,14 @@ import pygame
 from pygame.color import THECOLORS
 from pygame.locals import *
 
+import csv
+import time
+
 KINECTEVENT = pygame.USEREVENT
 pygame.init()
 skeletons = None
 video = np.empty((480,640,4),np.uint8)
+csvfile = None
 
 SKELETON_COLORS = [(255,0,0), 
                    (0,0,255), 
@@ -82,20 +86,42 @@ def kinect_video_function(frame):
 	video = np.empty((480,640,4),np.uint8)
 	frame.image.copy_bits(video.ctypes.data)
 
-	# Draw skeleton
+	# Draw skeleton and write to file
 	draw_skeletons()
-	#cv2.circle(video,(300,300),10,(255,255,255))
+	# Write skeleton to file
+	output_skeleton_file()
 
 	# Write video to output file
 	out.write(video)
-	# Show output file
+
+	# Show video output on screen
 	cv2.imshow('KINECT Video Stream', video)
+
+def output_skeleton_file():
+	global csvfile
+	global skeletons
+
+	if skeletons == None:
+		mywriter = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+		mywriter.writerow("[]")
+		return
+	skeleton_data = []
+	# For each skeleton, write it
+	for index, data in enumerate(skeletons):
+		# Make skeletons numeric values for printing
+		this_skel = []
+		for joint in data.SkeletonPositions:
+			this_skel.append(skeleton_to_depth_image(joint, 640, 480))
+		skeleton_data.append(this_skel)
+	mywriter = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	mywriter.writerow(skeleton_data)
 
 def draw_skeletons():
 	global skeletons
 	global video
 	if skeletons == None:
 		return
+	# For each skeleton, draw it
 	for index, data in enumerate(skeletons):
 		# draw the Head
 		HeadPos = skeleton_to_depth_image(data.SkeletonPositions[JointId.Head], 640, 480) 
@@ -151,24 +177,32 @@ def kinectvid():
 	# Main loop - runs video_handler_function automatically
 	done = False
 	while done == False:
-		e = pygame.event.wait()
+	
+		#e = pygame.event.wait()
+		e = pygame.event.poll()
 
-		if e.type == KINECTEVENT:
-			skeletons = e.skeletons
-			#draw_skeletons(skeletons)
-		elif e.type == pygame.QUIT:
-			done = True
-			print "Quit"
-			break
-
+		if e != pygame.NOEVENT:
+			if e.type == KINECTEVENT:
+				skeletons = e.skeletons
+				#draw_skeletons(skeletons)
+			elif e.type == pygame.QUIT:
+				done = True
+				print "Quit"
+				kinect.close()
+				print "Exit kinect"
+				break
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			done = True
 			print "Quit"
+			kinect.close()
+			print "Exit kinect"
 			break
 
+	# Finish writing to csv
+	csvfile.close()
+
 	print "Exit while"
-	kinect.close()
-	print "Exit kinect"
+	#kinect.close()
 	cv2.destroyAllWindows()
 	print "Exit cv2"
 	pygame.quit()
@@ -179,11 +213,16 @@ def kinectvid():
 def watchvid():
 	cap = cv2.VideoCapture('output.avi')
 	while(cap.isOpened()):
+		start = time.time() # To limit to 30fps
 		ret, frame = cap.read()
 		if ret == True:
+			
+			# Draw frame
 			cv2.imshow('frame', frame)
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
+			# Limit to 30fps
+			time.sleep(max(1./30 - (time.time() - start), 0))
 		else:
 			break
 	cap.release()
@@ -196,6 +235,11 @@ if choice == "0": # Webcam record
 elif choice == "1": # Kinect record
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 	out = cv2.VideoWriter('output.avi', fourcc, 30.0, (640, 480))
+
+	# Make a new file, joints.csv
+	csvfile = open('joints.csv', 'wb')
+	csvfile.truncate(0)
+
 	kinectvid()
 elif choice == "2": # Play video
 	watchvid()
