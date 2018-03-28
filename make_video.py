@@ -220,6 +220,10 @@ def watchvid():
 		ret, frame = cap.read()
 		if ret == True:
 			
+<<<<<<< HEAD
+=======
+			# Draw frame
+>>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
 			cv2.imshow('frame', frame)
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break

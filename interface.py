@@ -2,21 +2,16 @@ import pygame
 from pygame.locals import *
 import numpy as np
 import cv2
-<<<<<<< HEAD
-=======
 from make_video import main, watchvid, webcamvid
 
->>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
 i = pygame.init()
 
 #COLOR DEFINITIONS
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
-<<<<<<< HEAD
-=======
 RED = (255, 0, 0)
->>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
+
 #dimensions
 tilesize = 40
 mapwidth = 10
@@ -103,7 +98,7 @@ while True:
 	
 	button("you chose to use your web cam (deep pose)", 220, 75, 150, 40, GREEN, webcamvid)
 
-	button("you chose to use the kinect to find the spline", 115, 320, 150, 40, GREEN, main)
+	button("you chose to use the kinect to find the spine", 115, 320, 150, 40, GREEN, main)
 
 	
 
