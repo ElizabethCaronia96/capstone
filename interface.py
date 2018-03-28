@@ -34,89 +34,27 @@ def event_handler():
 def draw():
 	game_display.fill(WHITE)
 
-<<<<<<< HEAD
-	pygame.draw.rect(game_display, GREEN, [10,10,190,380])
-	pygame.draw.rect(game_display, BLUE, [200,10,380,380])
-=======
 	pygame.draw.rect(game_display, GREEN, [10,10,185,200])
 	pygame.draw.rect(game_display, BLUE, [210,10,185,200])
 	pygame.draw.rect(game_display, RED, [10,220,385,200])
->>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
 
 
 def button(msg, x, y, w, h, ic, action):
 	mouse = pygame.mouse.get_pos()
 	click = pygame.mouse.get_pressed()
-<<<<<<< HEAD
-	print click
-=======
 
->>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
 	if x+w > mouse[0] > x and y+h > mouse[1] > y:
 		pygame.draw.rect(game_display, WHITE, (x,y,w,h))
 
 		if click[0] == 1:
-<<<<<<< HEAD
-			action()
-=======
 			print msg
 			f = open('helloworld.txt','a')
 			f.write('\n' + msg)
 			f.close()
 			action()
-
->>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
-		
 	else:
 		pygame.draw.rect(game_display, ic, (x,y,w,h))
 
-<<<<<<< HEAD
-def watchvid():
-	print 'io2'
-	cap = cv2.VideoCapture('output.avi')
-
-	while(cap.isOpened()):
-	    ret, frame = cap.read()
-	    if ret == True:
-
-		    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-		    cv2.imshow('frame',gray)
-		    if cv2.waitKey(1) & 0xFF == ord('q'):
-		        break
-	    else: 
-	    	break
-	cap.release()
-	cv2.destroyAllWindows()
-
-def webcamvid():
-	cap = cv2.VideoCapture(0)
-	
-	fourcc = cv2.VideoWriter_fourcc(*'XVID')
-	out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
-
-	while(cap.isOpened()):
-		ret, frame = cap.read()
-		if ret == True:
-			out.write(frame)
-			
-			cv2.imshow('frame', frame)
-
-			if cv2.waitKey(1) & 0xFF == ord('q'):
-				break
-		else:
-			break
-	cap.release()
-	out.release()
-	cv2.destroyAllWindows()
-
-while True:
-	event_handler()
-	draw()
-	button("here", 20, 150, 150, 40, BLUE, watchvid)
-	button("here", 220, 150, 150, 40, GREEN, webcamvid)
-
-=======
 #def watchvid():
 #	print 'io2'
 #	cap = cv2.VideoCapture('output.avi')
@@ -166,7 +104,7 @@ while True:
 	button("you chose to use your web cam (deep pose)", 220, 75, 150, 40, GREEN, webcamvid)
 
 	button("you chose to use the kinect to find the spine", 115, 320, 150, 40, GREEN, main)
->>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
+
 	
 
 #	smallText = pygame.font.Font("freesansbold.ttf",20)
