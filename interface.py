@@ -103,7 +103,7 @@ while True:
 	
 	button("you chose to use your web cam (deep pose)", 220, 75, 150, 40, GREEN, webcamvid)
 
-	button("you chose to use the kinect to find the spine", 115, 320, 150, 40, GREEN, main)
+	button("you chose to use the kinect to find the spline", 115, 320, 150, 40, GREEN, main)
 
 	
 
