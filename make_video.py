@@ -64,7 +64,7 @@ def webcamvid():
 
 	#fourcc = cv2.VideoWriter_fourcc(*'XVID')
 	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-	out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+	out = cv2.VideoWriter('output.avi', fourcc, 30.0, (640, 480))
 
 	while(cap.isOpened()):
 		ret, frame = cap.read()
@@ -135,7 +135,7 @@ def draw_skeletons():
 		draw_skeleton_data(data, index, LEFT_LEG)
         draw_skeleton_data(data, index, RIGHT_LEG)
 
-def draw_skeleton_data(pSkelton, index, positions, width = 4):
+def draw_skeleton_data(pSkelton, index, positions, width=4):
 	global video
 	start = pSkelton.SkeletonPositions[positions[0]]
 		
@@ -144,6 +144,17 @@ def draw_skeleton_data(pSkelton, index, positions, width = 4):
 
 		curstart = skeleton_to_depth_image(start, 640, 480) 
 		curend = skeleton_to_depth_image(next, 640, 480)
+
+		"""
+		if width == 4:
+			print "Draw right leg: "+str(position)+" at "+str(curend)
+			#print "Draw right leg: "+str(curstart)+" to "+str(curend)
+			pass
+		elif width == 3:
+			print "Draw left leg: "+str(position)+" to "+str(curend)
+			#print "Draw left leg: "+str(curstart)+" to "+str(curend)
+			pass
+		"""
 
 		#pygame.draw.line(screen, SKELETON_COLORS[index], curstart, curend, width)
 		cv2.line(video,(int(curstart[0]),int(curstart[1])),(int(curend[0]),int(curend[1])),SKELETON_COLORS[index],width)
@@ -216,7 +227,7 @@ def watchvid():
 		start = time.time() # To limit to 30fps
 		ret, frame = cap.read()
 		if ret == True:
-			
+
 			# Draw frame
 			cv2.imshow('frame', frame)
 			if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -227,9 +238,26 @@ def watchvid():
 			break
 	cap.release()
 	cv2.destroyAllWindows()
-	
+
+# Replay skeleton
+def replayskeleton():
+	global video
+
+	# Open skeleton file
+	csvfile = open('joints.csv', 'r')
+	myreader = csv.reader(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+
+	# Iterate through rows in csv/frames in video
+	for row in myreader:
+		video = np.empty((480,640,4),np.uint8)
+
+		# Show video output on screen
+		cv2.imshow('KINECT Video Stream', video)
+
+	pass
+
 # Main
-choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for playing output.avi: ")
+choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for playing output.avi, 3 for playing skeleton file: ")
 if choice == "0": # Webcam record
 	webcamvid()
 elif choice == "1": # Kinect record
@@ -243,6 +271,8 @@ elif choice == "1": # Kinect record
 	kinectvid()
 elif choice == "2": # Play video
 	watchvid()
+elif choice == "3": # Replay skeleton file
+	replayskeleton()
 		
 """if __name__ == "__main__":
 	main()"""
