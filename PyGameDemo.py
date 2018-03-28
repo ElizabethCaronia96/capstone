@@ -113,8 +113,8 @@ def draw_skeletons(skeletons):
         # drawing the limbs
         draw_skeleton_data(data, index, LEFT_ARM)
         draw_skeleton_data(data, index, RIGHT_ARM)
-        #draw_skeleton_data(data, index, LEFT_LEG)
-        #draw_skeleton_data(data, index, RIGHT_LEG)
+        draw_skeleton_data(data, index, LEFT_LEG)
+        draw_skeleton_data(data, index, RIGHT_LEG)
 
 
 def depth_frame_ready(frame):
