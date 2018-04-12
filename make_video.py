@@ -61,6 +61,7 @@ skeleton_to_depth_image = nui.SkeletonEngine.skeleton_to_depth_image
 
 # Capture from Webcam
 def webcamvid():
+
 	cap = cv2.VideoCapture(0) # Webcam
 
 	#fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -71,6 +72,7 @@ def webcamvid():
 		ret, frame = cap.read()
 		if ret == True:
 			out.write(frame)
+			
 			cv2.imshow('frame', frame)
 
 			if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -224,12 +226,20 @@ def kinectvid():
 # Watch video
 def watchvid():
 	cap = cv2.VideoCapture('output.avi')
+	
 	while(cap.isOpened()):
 		start = time.time() # To limit to 30fps
 		ret, frame = cap.read()
 		if ret == True:
+<<<<<<< HEAD
 
+=======
+			
+<<<<<<< HEAD
+=======
+>>>>>>> origin/master
 			# Draw frame
+>>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
 			cv2.imshow('frame', frame)
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
