@@ -16,6 +16,7 @@ from pygame.locals import *
 
 import csv
 import time
+import ast
 
 KINECTEVENT = pygame.USEREVENT
 pygame.init()
@@ -102,8 +103,8 @@ def output_skeleton_file():
 	global skeletons
 
 	if skeletons == None:
-		mywriter = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-		mywriter.writerow("[]")
+		mywriter = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+		mywriter.writerow("")
 		return
 	skeleton_data = []
 	# For each skeleton, write it
@@ -113,7 +114,7 @@ def output_skeleton_file():
 		for joint in data.SkeletonPositions:
 			this_skel.append(skeleton_to_depth_image(joint, 640, 480))
 		skeleton_data.append(this_skel)
-	mywriter = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	mywriter = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
 	mywriter.writerow(skeleton_data)
 
 def draw_skeletons():
@@ -241,20 +242,40 @@ def watchvid():
 
 # Replay skeleton
 def replayskeleton():
-	global video
+	#global video
+	global skeletons
+	video = np.empty((480,640,4),np.uint8)
 
 	# Open skeleton file
-	csvfile = open('joints.csv', 'r')
-	myreader = csv.reader(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	with open('joints.csv', 'rb') as csvfile:
+		myreader = csv.reader(csvfile, delimiter=',',quotechar='|')
 
-	# Iterate through rows in csv/frames in video
-	for row in myreader:
-		video = np.empty((480,640,4),np.uint8)
+		# Iterate through rows in csv/frames in video
+		for row in myreader:
+			start = time.time() # To limit to 30fps
+			skeletons = []
+			if str(row) != "[]":
+				video = np.empty((480,640,4),np.uint8)
+				#skeletons = row
 
-		# Show video output on screen
-		cv2.imshow('KINECT Video Stream', video)
+				row = ast.literal_eval(str(row))
 
-	pass
+				i = 0
+				for skeleton in row:
+					skeleton = ast.literal_eval(skeleton)
+					skeletons.append(skeleton)
+					for joint in skeleton:
+						#print joint[0]
+						#print joint[1]
+						cv2.circle(video,(int(joint[0]),int(joint[1])),4,SKELETON_COLORS[0],-1)
+					#print "Skeleton "+ str(i) + ", Size " + str(len(skeleton)) +": " + str(skeleton)
+					i += 1
+				#draw_skeletons()
+
+				# Show video output on screen
+				cv2.imshow('KINECT Video Stream', video)
+				# Limit to 30fps
+				time.sleep(max(1./30 - (time.time() - start), 0))
 
 # Main
 choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for playing output.avi, 3 for playing skeleton file: ")
