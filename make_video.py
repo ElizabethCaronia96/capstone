@@ -89,13 +89,13 @@ def kinect_video_function(frame):
 	video = np.empty((480,640,4),np.uint8)
 	frame.image.copy_bits(video.ctypes.data)
 
+	# Write video to output file
+	out.write(video)
+
 	# Draw skeleton and write to file
 	draw_skeletons()
 	# Write skeleton to file
 	output_skeleton_file()
-
-	# Write video to output file
-	out.write(video)
 
 	# Show video output on screen
 	cv2.imshow('KINECT Video Stream', video)
@@ -231,15 +231,7 @@ def watchvid():
 		start = time.time() # To limit to 30fps
 		ret, frame = cap.read()
 		if ret == True:
-<<<<<<< HEAD
-
-=======
-			
-<<<<<<< HEAD
-=======
->>>>>>> origin/master
 			# Draw frame
->>>>>>> 112d700a3a3be65f7ec240d97efb45dd03d6da8e
 			cv2.imshow('frame', frame)
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
