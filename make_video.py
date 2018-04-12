@@ -242,7 +242,7 @@ def watchvid():
 
 # Replay skeleton
 def replayskeleton():
-	#global video
+	global video
 	global skeletons
 	video = np.empty((480,640,4),np.uint8)
 
@@ -268,14 +268,17 @@ def replayskeleton():
 						#print joint[0]
 						#print joint[1]
 						cv2.circle(video,(int(joint[0]),int(joint[1])),4,SKELETON_COLORS[0],-1)
+						#print "Draw circle"
 					#print "Skeleton "+ str(i) + ", Size " + str(len(skeleton)) +": " + str(skeleton)
 					i += 1
 				#draw_skeletons()
 
 				# Show video output on screen
-				cv2.imshow('KINECT Video Stream', video)
+				cv2.imshow('Skeleton Replay', video)
 				# Limit to 30fps
-				time.sleep(max(1./30 - (time.time() - start), 0))
+				#time.sleep(max(1./30 - (time.time() - start), 0))
+				cv2.waitKey(30)
+				#print "Play frame"
 
 # Main
 choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for playing output.avi, 3 for playing skeleton file: ")
