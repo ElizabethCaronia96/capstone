@@ -17,6 +17,7 @@ from pygame.locals import *
 import csv
 import time
 import ast
+import os.path
 
 KINECTEVENT = pygame.USEREVENT
 pygame.init()
@@ -249,38 +250,99 @@ def replayskeleton():
 	video = np.empty((480,640,4),np.uint8)
 
 	# Open skeleton file
-	with open('joints.csv', 'rb') as csvfile:
-		myreader = csv.reader(csvfile, delimiter=',',quotechar='|')
+	if (not os.path.isfile('joints.csv')) or (not os.path.exists('joints.csv')):
+		csvfile = None
+	else:
+		csvfile = open('joints.csv', 'rb')
 
-		# Iterate through rows in csv/frames in video
-		for row in myreader:
-			start = time.time() # To limit to 30fps
-			skeletons = []
-			if str(row) != "[]":
-				video = np.empty((480,640,4),np.uint8)
-				#skeletons = row
+	# See if there's a second skeleton file
+	if (not os.path.isfile('joints2.csv')) or (not os.path.exists('joints2.csv')):
+		csvfile2 = None
+	else:
+		csvfile2 = open('joints2.csv', 'rb')
 
-				row = ast.literal_eval(str(row))
+	# Open skeleton file
+	#with open('joints.csv', 'rb') as csvfile:
+	myreader = csv.reader(csvfile, delimiter=',',quotechar='|')
+	if csvfile2 != None:
+		myreader2 = csv.reader(csvfile2, delimiter=',',quotechar='|')
+	else:
+		myreader2 = None
+		row2 = None
 
-				i = 0
+	# Iterate through rows in csv/frames in video
+	#for row in myreader:
+
+	# Iterate through rows in both csv files
+	row = myreader.next()
+	if myreader2 != None:
+		row2 = myreader2.next()
+
+	pause = False
+
+	while row != None or row2 != None:
+		start = time.time() # To limit to 30fps
+		skeletons = []
+		if str(row) != "[]":
+			video = np.empty((480,640,4),np.uint8)
+			#skeletons = row
+
+			row = ast.literal_eval(str(row))
+
+			# For each skeleton in the video
+			i = 0
+			if row != None:
 				for skeleton in row:
 					skeleton = ast.literal_eval(skeleton)
 					skeletons.append(skeleton)
+					# For each joint in the skeleton
 					for joint in skeleton:
 						#print joint[0]
 						#print joint[1]
-						cv2.circle(video,(int(joint[0]),int(joint[1])),4,SKELETON_COLORS[0],-1)
+						cv2.circle(video,(int(joint[0]),int(joint[1])),4,SKELETON_COLORS[i],-1)
 						#print "Draw circle"
 					#print "Skeleton "+ str(i) + ", Size " + str(len(skeleton)) +": " + str(skeleton)
 					i += 1
-				#draw_skeletons()
+					i = i % 6
+			if row2 != None:
+				for skeleton in row2:
+					skeleton = ast.literal_eval(skeleton)
+					skeletons.append(skeleton)
+					# For each joint in the skeleton
+					for joint in skeleton:
+						#print joint[0]
+						#print joint[1]
+						cv2.circle(video,(int(joint[0]),int(joint[1])),4,SKELETON_COLORS[i],-1)
+						#print "Draw circle"
+					#print "Skeleton "+ str(i) + ", Size " + str(len(skeleton)) +": " + str(skeleton)
+					i += 1
+					i = i % 6
+			#draw_skeletons()
 
-				# Show video output on screen
-				cv2.imshow('Skeleton Replay', video)
-				# Limit to 30fps
-				#time.sleep(max(1./30 - (time.time() - start), 0))
-				cv2.waitKey(30)
-				#print "Play frame"
+			# Show video output on screen
+			cv2.imshow('Skeleton Replay', video)
+
+			# Pause
+			if (cv2.waitKey(30) & 0xFF == ord('p')):
+				pause = True
+
+			while pause == True:
+				if cv2.waitKey(1) & 0xFF == ord('p'):
+					pause = False
+				elif cv2.waitKey(1) & 0xFF == ord('n'):
+					break
+
+		# Iterate through rows in both csv files
+		if row != None:
+			try:
+				row = myreader.next()
+			except StopIteration:
+				row = None
+		if row2 != None:
+				try:
+					row2 = myreader2.next()
+				except StopIteration:
+					row2 = None
 
 # Main
 choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for playing output.avi, 3 for playing skeleton file: ")
