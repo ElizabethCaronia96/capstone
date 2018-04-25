@@ -16,6 +16,12 @@ from pygame.locals import *
 
 import csv
 import time
+import ast
+import os
+import json
+from pprint import pprint
+import glob
+import time
 
 KINECTEVENT = pygame.USEREVENT
 pygame.init()
@@ -60,25 +66,51 @@ skeleton_to_depth_image = nui.SkeletonEngine.skeleton_to_depth_image
 
 # Capture from Webcam
 def webcamvid():
-	cap = cv2.VideoCapture(0) # Webcam
+	curDir = os.getcwd()
+	path = curDir + '\\openpose-1.2.1-win64-binaries\\openpose-1.2.1-win64-binaries'
+	os.chdir(path)
+	print os.getcwd()
+	t = time.time()
+	os.system("bin\OpenPoseDemo.exe --write_json  ../../output --disable_multi_thread --part_candidates --camera_fps 0.7")
+	elapsed = time.time() - t
+	os.chdir(curDir)
 
-	#fourcc = cv2.VideoWriter_fourcc(*'XVID')
-	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-	out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+	return writeSkeletonAsMatrix('openpose', ''), elapsed
 
-	while(cap.isOpened()):
-		ret, frame = cap.read()
-		if ret == True:
-			out.write(frame)
-			cv2.imshow('frame', frame)
+def writeSkeletonAsMatrix(action, filename):
+	
+	if action == 'openpose':
+		jsonFiles = glob.glob('output/*.json')
+		matrix = np.zeros((2*len(jsonFiles), 18))
+		row = -2
+		for f in jsonFiles:
+			row = row + 2
+			#print row
+			with open(f) as data_file:
+				data = json.load(data_file)
+				#pprint(data)
+				for joint in range(0, 17):
+					q = str(joint)
+					if data["part_candidates"][0][q]:
+						x = data["part_candidates"][0][q][0]
+						y =  data["part_candidates"][0][q][1]
+						for i in range(2, len(data["part_candidates"][0][q]), 3):
+							maxTemp = data["part_candidates"][0][q][2]
+							if (maxTemp < data["part_candidates"][0][q][i]):
+								maxTemp = data["part_candidates"][0][q][i]
+								x = data["part_candidates"][0][q][i-2]
+								y =  data["part_candidates"][0][q][i-1]
+						
+							
+						matrix[row][joint] = x
+						matrix[row+1][joint] = y
+						print 'row = time ', row, ' joint# ', joint, ' x ', x, ' y ', y
+					
+	else:
+		print 'fuck'
+	print ' -------------------------------------------------------- '
+	return matrix
 
-			if cv2.waitKey(1) & 0xFF == ord('q'):
-				break
-		else:
-			break
-	cap.release()
-	out.release()
-	cv2.destroyAllWindows()
 
 # Capture from Kinect
 def kinect_video_function(frame):
@@ -102,8 +134,8 @@ def output_skeleton_file():
 	global skeletons
 
 	if skeletons == None:
-		mywriter = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-		mywriter.writerow("[]")
+		mywriter = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+		mywriter.writerow("")
 		return
 	skeleton_data = []
 	# For each skeleton, write it
@@ -113,7 +145,7 @@ def output_skeleton_file():
 		for joint in data.SkeletonPositions:
 			this_skel.append(skeleton_to_depth_image(joint, 640, 480))
 		skeleton_data.append(this_skel)
-	mywriter = csv.writer(csvfile, delimiter=';',quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	mywriter = csv.writer(csvfile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL)
 	mywriter.writerow(skeleton_data)
 
 def draw_skeletons():
@@ -135,7 +167,7 @@ def draw_skeletons():
 		draw_skeleton_data(data, index, LEFT_LEG)
         draw_skeleton_data(data, index, RIGHT_LEG)
 
-def draw_skeleton_data(pSkelton, index, positions, width = 4):
+def draw_skeleton_data(pSkelton, index, positions, width=4):
 	global video
 	start = pSkelton.SkeletonPositions[positions[0]]
 		
@@ -144,6 +176,17 @@ def draw_skeleton_data(pSkelton, index, positions, width = 4):
 
 		curstart = skeleton_to_depth_image(start, 640, 480) 
 		curend = skeleton_to_depth_image(next, 640, 480)
+
+		"""
+		if width == 4:
+			print "Draw right leg: "+str(position)+" at "+str(curend)
+			#print "Draw right leg: "+str(curstart)+" to "+str(curend)
+			pass
+		elif width == 3:
+			print "Draw left leg: "+str(position)+" to "+str(curend)
+			#print "Draw left leg: "+str(curstart)+" to "+str(curend)
+			pass
+		"""
 
 		#pygame.draw.line(screen, SKELETON_COLORS[index], curstart, curend, width)
 		cv2.line(video,(int(curstart[0]),int(curstart[1])),(int(curend[0]),int(curend[1])),SKELETON_COLORS[index],width)
@@ -216,7 +259,7 @@ def watchvid():
 		start = time.time() # To limit to 30fps
 		ret, frame = cap.read()
 		if ret == True:
-			
+
 			# Draw frame
 			cv2.imshow('frame', frame)
 			if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -227,22 +270,45 @@ def watchvid():
 			break
 	cap.release()
 	cv2.destroyAllWindows()
-	
-# Main
-choice = raw_input("0 for webcam and save, 1 for kinect and save, 2 for playing output.avi: ")
-if choice == "0": # Webcam record
-	webcamvid()
-elif choice == "1": # Kinect record
-	fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-	out = cv2.VideoWriter('output.avi', fourcc, 30.0, (640, 480))
 
-	# Make a new file, joints.csv
-	csvfile = open('joints.csv', 'wb')
-	csvfile.truncate(0)
+# Replay skeleton
+def replayskeleton():
+	#global video
+	global skeletons
+	video = np.empty((480,640,4),np.uint8)
 
-	kinectvid()
-elif choice == "2": # Play video
-	watchvid()
-		
-"""if __name__ == "__main__":
-	main()"""
+	# Open skeleton file
+	with open('joints.csv', 'rb') as csvfile:
+		myreader = csv.reader(csvfile, delimiter=',',quotechar='|')
+
+		# Iterate through rows in csv/frames in video
+		for row in myreader:
+			start = time.time() # To limit to 30fps
+			skeletons = []
+			if str(row) != "[]":
+				video = np.empty((480,640,4),np.uint8)
+				#skeletons = row
+
+				row = ast.literal_eval(str(row))
+
+				i = 0
+				for skeleton in row:
+					skeleton = ast.literal_eval(skeleton)
+					skeletons.append(skeleton)
+					for joint in skeleton:
+						#print joint[0]
+						#print joint[1]
+						cv2.circle(video,(int(joint[0]),int(joint[1])),4,SKELETON_COLORS[0],-1)
+					#print "Skeleton "+ str(i) + ", Size " + str(len(skeleton)) +": " + str(skeleton)
+					i += 1
+				#draw_skeletons()
+
+				# Show video output on screen
+				cv2.imshow('KINECT Video Stream', video)
+				# Limit to 30fps
+				time.sleep(max(1./30 - (time.time() - start), 0))
+
+
+if __name__ == "__main__":
+	print 'hello world'
+	print writeSkeletonAsMatrix('openpose', '')
